@@ -1,0 +1,6 @@
+put facility_design.py, Instance2.txt, Instance1.txt in one folder
+
+in command line run command
+1) python  facility_design.py Instance2.txt
+2) python  facility_design.py Instance1.txt
+
