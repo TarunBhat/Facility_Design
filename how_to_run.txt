@@ -1,3 +1,4 @@
+install scipy, numpy packages for python
 put facility_design.py, Instance2.txt, Instance1.txt in one folder
 
 in command line run command
