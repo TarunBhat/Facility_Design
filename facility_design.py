@@ -48,7 +48,7 @@ def kmeans(k, data):
     MAX_ITR = 100
 
     while True:
-        old_centers = np.copy(centers)
+        old_idx = np.copy(idx)
         # compute weighted distance from each point to centers and assifn
         # to nearest cluster
         for i in range(0,row):
@@ -63,7 +63,8 @@ def kmeans(k, data):
         getnewCenters(k,idx,data,centers)
 
         centers = np.rint(centers)
-        if np.array_equal(old_centers,centers):
+        # check if allocation remain same
+        if np.array_equal(old_idx,idx):
             break
 
 
