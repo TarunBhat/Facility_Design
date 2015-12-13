@@ -1,6 +1,7 @@
 import numpy as np
 import sys
 from scipy.optimize import minimize
+from scipy.optimize import minimize_scalar
 
 
 def parseFile(filename):
@@ -34,9 +35,10 @@ def parseFile(filename):
 def kmeans(k, data):
     row = data.shape[0]
     col = data.shape[1]
-    rand = np.random.choice(row, k)
     # choose random centers to start
+    rand = np.array(range(0,k))
     centers = data[rand, 2:4]
+    centers = centers + 1
 
     # The assignments of points to clusters. If idx(i) == c then the point
     # data(i, :) belongs to the cth cluster.
@@ -46,7 +48,7 @@ def kmeans(k, data):
     MAX_ITR = 100
 
     while True:
-        old_idx = np.copy(idx)
+        old_centers = np.copy(centers)
         # compute weighted distance from each point to centers and assifn
         # to nearest cluster
         for i in range(0,row):
@@ -57,11 +59,13 @@ def kmeans(k, data):
             # assign the cluster which is at min weighted distance
             idx[i] = np.argmin(wdist)
 
-        if np.array_equal(old_idx, idx):
+        # update the cluster centers
+        getnewCenters(k,idx,data,centers)
+
+        centers = np.rint(centers)
+        if np.array_equal(old_centers,centers):
             break
 
-        # update the cluster centers
-        centers = getnewCenters(k,idx,data,centers)
 
         itr = itr + 1
         if itr > MAX_ITR:
@@ -69,28 +73,33 @@ def kmeans(k, data):
 
     printAns(k, idx, data, centers)
 
-def getnewCenters(k, idx, data, old_centers):
+def getnewCenters(k, idx, data, centers):
     for i in range(0, k):
         indexes = np.sum(np.transpose((idx == i).nonzero()), 1)
-        initial_center = old_centers[i]
 
-        args = (data[indexes],i)
-        opts = {'maxiter' : 100}
-        param = minimize(objFunction, initial_center, args=args,method='nelder-mead', options=opts)
-        old_centers[i] = param.x
-    # updated center
-    return old_centers
+        weights = data[indexes,1]
+        # find optimal x cord
+        facility_xcord = data[indexes,2]
+        args = (weights, facility_xcord)
+
+        xcord = minimize_scalar(newobj,args=args)
+
+        # find optimal y cord
+        facility_ycord = data[indexes,3]
+        args = (weights,facility_ycord)
+        ycord = minimize_scalar(newobj,args=args)
+
+        # update center
+        centers[i][0] = xcord.x
+        centers[i][1] = ycord.x
 
 
-def objFunction(center, *args):
-    arg, i = args
-    weight = arg[:,1]
-    facility = arg[:,2:4]
-    recenter = np.tile(center,(facility.shape[0], 1))
-    diff =  np.sum(abs(recenter- facility),1)
-    cost = np.sum(weight*diff)
 
+def newobj(center, *args):
+    weight, facility = args
+    cost = np.sum(weight*(abs(facility-center)))
     return cost
+
 
 def printAns(k, idx, data, centers):
     print "%s %10s %10s %20s".format() % ("Faclity", "X cord", "Y cord", "Cost")
