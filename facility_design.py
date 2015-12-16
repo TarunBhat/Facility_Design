@@ -36,7 +36,7 @@ def kmeans(k, data):
     row = data.shape[0]
     col = data.shape[1]
     # choose random centers to start
-    rand = np.array(range(0,k))
+    rand =  np.random.choice(row, k, replace = False)
     centers = data[rand, 2:4]
     centers = centers + 1
 
@@ -55,9 +55,8 @@ def kmeans(k, data):
             repeat = np.tile(data[i,[2,3]], (k, 1))
             weight = data[i,1]
             diff = np.sum(abs(repeat - centers),1)
-            wdist = weight*diff
-            # assign the cluster which is at min weighted distance
-            idx[i] = np.argmin(wdist)
+            # assign the cluster which is at min distance
+            idx[i] = np.argmin(diff)
 
         # update the cluster centers
         getnewCenters(k,idx,data,centers)
@@ -65,6 +64,7 @@ def kmeans(k, data):
         centers = np.rint(centers)
         # check if allocation remain same
         if np.array_equal(old_idx,idx):
+            print "converge at :" + str(itr)
             break
 
 
@@ -83,20 +83,43 @@ def getnewCenters(k, idx, data, centers):
         facility_xcord = data[indexes,2]
         args = (weights, facility_xcord)
 
-        xcord = minimize_scalar(newobj,args=args)
+        print "FOR XCORD OF NEW FACILITY :" + str(i + 1)
+        xcord = minimizeCost(centers[i][0], args)
 
         # find optimal y cord
         facility_ycord = data[indexes,3]
         args = (weights,facility_ycord)
-        ycord = minimize_scalar(newobj,args=args)
-
+        print "FOR YCOORD OF NEW FACILITY :"+ str(i + 1)
+        ycord = minimizeCost(centers[i][1], args)
         # update center
-        centers[i][0] = xcord.x
-        centers[i][1] = ycord.x
+        centers[i][0] = xcord
+        centers[i][1] = ycord
+'''
+ Method to find cordinate at which cost is minimum
+'''
+def minimizeCost(initial_point, args):
+    step = 0.009
+    coord = initial_point
+    val = newobj(initial_point,args)
+    delta = 0
+
+    if newobj(initial_point,args) < newobj(initial_point + step, args):
+        step = -0.009
+
+    print "obj cost initital :" + str(val)
+    while(delta == 0):
+        oldcoord = coord
+        oldval = val
+        coord = coord + step
+        val = newobj(coord, args)
+        print "obj cost : " + str(val)
+        if(val > oldval ):
+            delta = 1
+
+    return oldcoord
 
 
-
-def newobj(center, *args):
+def newobj(center, args):
     weight, facility = args
     cost = np.sum(weight*(abs(facility-center)))
     return cost
