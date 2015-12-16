@@ -1,7 +1,5 @@
 import numpy as np
 import sys
-from scipy.optimize import minimize
-from scipy.optimize import minimize_scalar
 
 
 def parseFile(filename):
